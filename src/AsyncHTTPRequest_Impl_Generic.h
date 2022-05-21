@@ -45,6 +45,8 @@
  
 #pragma once
 
+#include <atomic>
+
 #ifndef ASYNC_HTTP_REQUEST_GENERIC_IMPL_H
 #define ASYNC_HTTP_REQUEST_GENERIC_IMPL_H
 
@@ -1190,26 +1192,30 @@ bool   AsyncHTTPRequest::_buildRequest()
 //**************************************************************************************************************
 size_t  AsyncHTTPRequest::_send()
 {
+  volatile static std::atomic_flag state_ = ATOMIC_FLAG_INIT;
+
   if ( ! _request)
     return 0;
 
   if ( ! _requestReady)
     return 0;
 
-
+  if (state_.test_and_set())
+    return 0;
+  
   AHTTP_LOGDEBUG1("_send(), _request->available =", _request->available());
 
 #if 1
   if ( ! _client->connected())
   {
     AHTTP_LOGDEBUG("!connected");
-
+    state_.clear();
     return 0;
   }
   else if ( ! _client->canSend())
   {
     AHTTP_LOGDEBUG("*can't send");
-
+    state_.clear();
     return 0;
   }
 #else
@@ -1230,8 +1236,10 @@ size_t  AsyncHTTPRequest::_send()
   size_t sent = 0;
   uint8_t* temp = new uint8_t[100];
   
-  if (!temp)
+  if (!temp){
+    state_.clear();
     return 0;
+  }
 
   while (supply)
   {
@@ -1259,6 +1267,7 @@ size_t  AsyncHTTPRequest::_send()
 
   _lastActivity = millis();
 
+  state_.clear();
   return sent;
 }
 
