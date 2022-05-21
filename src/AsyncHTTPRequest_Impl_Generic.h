@@ -443,7 +443,7 @@ AsyncHTTPRequest::AsyncHTTPRequest(): _readyState(readyStateUnsent), _HTTPcode(0
   , _timeout(DEFAULT_RX_TIMEOUT), _lastActivity(0), _requestStartTime(0), _requestEndTime(0), _URL(nullptr)
   , _connectedHost(nullptr), _connectedPort(-1), _client(nullptr), _contentLength(0), _contentRead(0)
   , _readyStateChangeCB(nullptr), _readyStateChangeCBarg(nullptr), _onDataCB(nullptr), _onDataCBarg(nullptr)
-  , _request(nullptr), _response(nullptr), _chunks(nullptr), _headers(nullptr)
+  , _request(nullptr),_requestReady(false) , _response(nullptr), _chunks(nullptr), _headers(nullptr)
 {
 #ifdef ESP32
   threadLock = xSemaphoreCreateRecursiveMutex();
@@ -516,6 +516,7 @@ bool  AsyncHTTPRequest::open(const char* method, const char* URL)
   _headers      = nullptr;
   _response     = nullptr;
   _request      = nullptr;
+  _requestReady = false;
   _chunks       = nullptr;
   _chunked      = false;
   _contentRead  = 0;
@@ -1181,6 +1182,7 @@ bool   AsyncHTTPRequest::_buildRequest()
   
   _headers = nullptr;
   _request->write("\r\n");
+  _requestReady = true;
 
   return true;
 }
@@ -1190,6 +1192,10 @@ size_t  AsyncHTTPRequest::_send()
 {
   if ( ! _request)
     return 0;
+
+  if ( ! _requestReady)
+    return 0;
+
 
   AHTTP_LOGDEBUG1("_send(), _request->available =", _request->available());
 
@@ -1240,6 +1246,7 @@ size_t  AsyncHTTPRequest::_send()
 
   if (_request->available() == 0)
   {
+    _requestReady = false;
     //delete _request;
     SAFE_DELETE(_request)
     

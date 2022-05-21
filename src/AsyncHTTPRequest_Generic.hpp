@@ -396,6 +396,7 @@ class AsyncHTTPRequest
     // request and response String buffers and header list (same queue for request and response).
 
     xbuf*       _request;                       // Tx data buffer
+    bool        _requestReady;                  // Tx data ready
     xbuf*       _response;                      // Rx data buffer for headers
     xbuf*       _chunks;                        // First stage for chunked response
     header*     _headers;                       // request or (readyState > readyStateHdrsRcvd) response headers
