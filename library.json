@@ -39,7 +39,7 @@
     {
       "owner": "me-no-dev",
       "name": "ESPAsyncTCP",
-      "version": ">=1.2.2",
+      "version": "https://github.com/walkure/ESPAsyncTCP.git#10e3df8d4dc985847894643e33a9afe7f6a5dfb7",
       "platforms": "espressif8266"
     },
     {
